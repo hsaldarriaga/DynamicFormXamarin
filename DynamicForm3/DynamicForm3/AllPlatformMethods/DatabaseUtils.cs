@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DynamicForm3.Dependence
+namespace DynamicForm3.AllPlatformMethods
 {
     public interface DatabaseUtils
     {

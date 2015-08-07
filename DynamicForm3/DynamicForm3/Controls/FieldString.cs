@@ -17,7 +17,7 @@ namespace DynamicForm3.Controls
                 HorizontalOptions = LayoutOptions.FillAndExpand,
                 KeyBoardType = "Text"
             };
-            customEntry.TextChanged += (sender, e) =>
+            customEntry.Unfocused += (sender, e) =>
             {
                 FieldChanging();
             };
@@ -32,7 +32,6 @@ namespace DynamicForm3.Controls
         public override void setValue(string value)
         {
             customEntry.Text = value;
-            FieldChanging();
         }
 
         private CustomEntry customEntry;

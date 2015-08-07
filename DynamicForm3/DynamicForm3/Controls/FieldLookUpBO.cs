@@ -11,7 +11,7 @@ namespace DynamicForm3.Controls
     {
         public FieldLookUpBO(String id, String caption, String bo_id): base(caption, id, FIELD_TYPES.LOOKUP_BO)
         {
-            var BOObjects = DependencyService.Get<Dependence.DatabaseUtils>().getBOList(bo_id, false);
+            var BOObjects = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getBOList(bo_id, false);
             AllValues = new Dictionary<string, string>();
             foreach (var item in BOObjects)
             {
@@ -19,7 +19,8 @@ namespace DynamicForm3.Controls
             }
             bt = new Button
             {
-                HorizontalOptions = LayoutOptions.FillAndExpand
+                HorizontalOptions = LayoutOptions.FillAndExpand,
+                Text = "Nuevo"
             };
             bt.Clicked += bt_Clicked;
             Children.Add(bt);
@@ -37,6 +38,7 @@ namespace DynamicForm3.Controls
             this.key = key.ToString();
             this.value = value.ToString();
             bt.Text = this.key;
+            FieldChanging();
         }
 
         public override string getValue()
@@ -47,8 +49,7 @@ namespace DynamicForm3.Controls
         public override void setValue(string value)
         {
             key = value;
-            bt.Text = value;
-            FieldChanging();
+            bt.Text = "Modificar";
         }
 
         private Dictionary<string, string> AllValues;

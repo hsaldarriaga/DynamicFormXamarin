@@ -17,8 +17,9 @@ namespace DynamicForm3.Controls
                 HorizontalOptions = LayoutOptions.StartAndExpand,
                 Title = "Seleccionar",
                 Items = {
-                    "Verdadero","Falso"
-                }
+                    "Sí","No"
+                },
+                SelectedIndex = 1
             };
             Picker.SelectedIndexChanged += (sender, e) =>
             {
@@ -44,7 +45,6 @@ namespace DynamicForm3.Controls
                     Picker.SelectedIndex = 0;
                 else
                     Picker.SelectedIndex = 1;
-                FieldChanging();
             }
         }
 

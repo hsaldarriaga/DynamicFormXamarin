@@ -10,10 +10,10 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-[assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.Droid.DependenceService.DatabaseDroidCRUD))]
-namespace DynamicForm3.Droid.DependenceService
+[assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.Droid.DependencyService.DatabaseDroidCRUD))]
+namespace DynamicForm3.Droid.DependencyService
 {
-    public class DatabaseDroidCRUD : Java.Lang.Object, DynamicForm3.Dependence.DatabaseCRUD
+    public class DatabaseDroidCRUD : Java.Lang.Object, DynamicForm3.AllPlatformMethods.DatabaseCRUD
     {
         public string CreateBO(List<Dictionary<string, object>> obj, string bo_id, bool IsLink)
         {
@@ -31,6 +31,12 @@ namespace DynamicForm3.Droid.DependenceService
         {
             return DroidDatabase.Instance.DeleteBOData(doc_id);
         }
-
+        public bool init_usuarios() {
+            return DroidDatabase.Instance.init_usuarios();
+        }
+        public string iniciar_sesion(string user, string pass, out string message_error)
+        {
+            return DroidDatabase.Instance.iniciar_sesion(user, pass,out message_error);
+        }
     }
 }

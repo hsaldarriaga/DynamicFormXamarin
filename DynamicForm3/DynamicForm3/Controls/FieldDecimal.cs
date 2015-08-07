@@ -17,7 +17,7 @@ namespace DynamicForm3.Controls
                 HorizontalOptions = LayoutOptions.FillAndExpand,
                 KeyBoardType = "Decimal"
             };
-            customEntry.TextChanged += (sender, e) =>
+            customEntry.Unfocused += (sender, e) =>
             {
                 FieldChanging();
             };
@@ -39,7 +39,6 @@ namespace DynamicForm3.Controls
             if (value.HasValue)
             {
                 customEntry.Text = value.Value + "";
-                FieldChanging();
             }
         }
 

@@ -27,14 +27,18 @@ namespace DynamicForm3.Pages
             this.IsLinked = Islink;
             ID = values["DocumentID"].ToString();
             var jarr = (values["Document_Values"] as Dictionary<string, object>)["field_values"] as JArray;
-            if (jarr == null)
-                this.values = (values["Document_Values"] as Dictionary<string, object>)["field_values"] as List<Dictionary<string, object>>;
-            else
+            if (jarr != null)
+            {
                 this.values = jarr.ToObject<List<Dictionary<string, object>>>();
+            }
+            else
+            {
+                this.values = (values["Document_Values"] as Dictionary<string, object>)["field_values"] as List<Dictionary<string, object>>;
+            }
             Initialize(form_id);
         }
 
-        public void Initialize(string form_id)
+        private void Initialize(string form_id)
         {
             title = new Label
             {
@@ -42,9 +46,12 @@ namespace DynamicForm3.Pages
             };
             var Update = new Button
             {
-                HorizontalOptions = LayoutOptions.Center,
-                Text = "Crear o Actualizar"
+                HorizontalOptions = LayoutOptions.Center
             };
+            if (IsUpdate)
+                Update.Text = "Actualizar";
+            else
+                Update.Text = "Crear";
             var Delete = new Button
             {
                 HorizontalOptions = LayoutOptions.Center,
@@ -76,6 +83,19 @@ namespace DynamicForm3.Pages
             Update.Clicked += Update_Clicked;
             Delete.Clicked += Delete_Clicked;
             Cancel.Clicked += Cancel_Clicked;
+            Content = new ActivityIndicator
+            {
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                IsRunning = true,
+                IsEnabled = true
+            };
+            AddContent(form_id, maincontent);
+            
+        }
+
+        private void AddEverything(StackLayout maincontent)
+        {
             Content = new ScrollView
             {
                 HorizontalOptions = LayoutOptions.FillAndExpand,
@@ -83,27 +103,25 @@ namespace DynamicForm3.Pages
                 Padding = 5,
                 Content = maincontent
             };
-
-            AddContent(form_id);
+            Finished = true;
+            UpdateControls(null, null);
         }
 
-        void Cancel_Clicked(object sender, EventArgs e)
+        private void Cancel_Clicked(object sender, EventArgs e)
         {
             Navigation.PopAsync();
         }
 
-        void Delete_Clicked(object sender, EventArgs e)
+        private void Delete_Clicked(object sender, EventArgs e)
         {
-            DependencyService.Get<Dependence.DatabaseCRUD>().DeleteBO(ID);
+            DependencyService.Get<AllPlatformMethods.DatabaseCRUD>().DeleteBO(ID);
             if (FormPageEvents != null)
                 FormPageEvents.FormDeleted(ID);
             Navigation.PopAsync();
         }
 
-        void Update_Clicked(object sender, EventArgs e)
+        private void Update_Clicked(object sender, EventArgs e)
         {
-            
-            
             if (IsUpdate)
             {
                 var values = new Dictionary<string, object>();
@@ -114,12 +132,12 @@ namespace DynamicForm3.Pages
                     var val = content.Children.ElementAt(i);
                     if (!(val is FieldLabel))
                     {
-                        var elem = SaveData(val, i - 1);
+                        var elem = DynamicForm3.Models.Tools.SaveData(val, i - 1);
                         list_values.Add(elem);
                     }
                 }
                 values.Add("field_values", list_values);
-                if(DependencyService.Get<Dependence.DatabaseCRUD>().UpdateBO(values, ID, IsLinked))
+                if(DependencyService.Get<AllPlatformMethods.DatabaseCRUD>().UpdateBO(values, ID, IsLinked))
                     Navigation.PopAsync();
                 if (FormPageEvents != null)
                     FormPageEvents.FormUpdated(ID);
@@ -132,11 +150,11 @@ namespace DynamicForm3.Pages
                     var val = content.Children.ElementAt(i);
                     if (!(val is FieldLabel))
                     {
-                        var elem = SaveData(val, i - 1);
+                        var elem = DynamicForm3.Models.Tools.SaveData(val, i - 1);
                         values.Add(elem);
                     }
                 }
-                ID = DependencyService.Get<Dependence.DatabaseCRUD>().CreateBO(values, BO_ID, IsLinked);
+                ID = DependencyService.Get<AllPlatformMethods.DatabaseCRUD>().CreateBO(values, BO_ID, IsLinked);
                 if (ID != null)
                 {
                     Navigation.PopAsync();
@@ -144,321 +162,206 @@ namespace DynamicForm3.Pages
                         FormPageEvents.FormCreated(ID);
                 }
             }
-            
         }
 
-        public void AddContent(string id)
+        private async void AddContent(string id, StackLayout maincontent)
         {
-            BO_ID = id;
-            allfields = new List<Models.FormField>();
-            var data = DependencyService.Get<Dependence.DatabaseUtils>().getForm(id);
-            title.Text = data["description"].ToString();
-            var fields = data["fields"] as JArray;
-            fields.OrderBy((e) => Int32.Parse(e["prop_view_order"].ToString()));
-            foreach (var item in fields)
+            await Task.Run(() =>
             {
-                string caption = item["caption"].ToString();
-                string prop_id = item["prop_id"].ToString();
-                var type = (FIELD_TYPES)Int32.Parse(item["field_type"].ToString());
-                Dictionary<string,object> update_value = null;
-                if (IsUpdate)
-                    foreach (var item1 in values)
-                    {
-                        if (item1["prop_id"].ToString() == prop_id)
-                        {
-                            update_value = item1; break;
-                        }
-                    }
-                Models.FormField formfield = null;
-                StackLayout campo;
-                switch (type)
+                BO_ID = id;
+                allfields = new List<Models.FormField>();
+                var data = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getForm(id);
+                content.Children.Add(new Entry
                 {
-                    case FIELD_TYPES.TIME:
-                        FieldTime ttime = new FieldTime(prop_id, caption);
-                        ttime.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            ttime.setValue(TimeSpan.Parse(update_value["value"].ToString()));
-                        content.Children.Add(ttime);
-                        campo = ttime as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.STRING:
-                        FieldString str = new FieldString(prop_id, caption);
-                        str.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            str.setValue(update_value["value"].ToString());
-                        content.Children.Add(str);
-                        campo = str as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.LOOKUP_FIXED:
-                        string datasource = item["datasource"].ToString();
-                        string prop_title = item["title"].ToString();
-                        var data1 = DependencyService.Get<Dependence.DatabaseUtils>().getEnumeration(datasource);
-                        FieldLookUp look = new FieldLookUp(prop_id, prop_title, data1);
-                        look.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            look.setValue(Int32.Parse(update_value["value"].ToString()));
-                        content.Children.Add(look);
-                        campo = look as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.LOOKUP_BO:
-                        string bo_type = item["link_to"].ToString();
-                        FieldLookUpBO lookupbo = new FieldLookUpBO(prop_id, caption, bo_type);
-                        lookupbo.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            lookupbo.setValue(update_value["value"].ToString());
-                        content.Children.Add(lookupbo);
-                        campo = lookupbo as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.LABEL:
-                        FieldLabel label = new FieldLabel(caption, prop_id);
-                        content.Children.Add(label);
-                        break;
-                    case FIELD_TYPES.INTEGER:
-                        FieldInteger view = new FieldInteger(prop_id, caption);
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            view.setValue(Int32.Parse(update_value["value"].ToString()));
-                        view.FieldValueChanged = UpdateControls;
-                        content.Children.Add(view);
-                        campo = view as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.FIX_VALUE:
-                        break;
-                    case FIELD_TYPES.DECIMAL:
-                        FieldDecimal decim = new FieldDecimal(prop_id, caption);
-                        decim.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
+                    Text = data.ToString()
+                });
+                title.Text = data["description"].ToString();
+                var fields = data["fields"] as JArray;
+                fields.OrderBy((e) => Int32.Parse(e["prop_view_order"].ToString()));
+                foreach (var item in fields)
+                {
+                    string caption = item["caption"].ToString();
+                    string prop_id = item["prop_id"].ToString();
+                    var type = (FIELD_TYPES)Int32.Parse(item["field_type"].ToString());
+                    Dictionary<string, object> update_value = null;
+                    if (IsUpdate)
+                        foreach (var item1 in values)
                         {
-                            decimal? value_dec = null;
-                            decimal real_val;
-                            if (decimal.TryParse(update_value["value"].ToString(), out real_val)){
-                                value_dec = real_val;
+                            if (item1["prop_id"].ToString() == prop_id)
+                            {
+                                update_value = item1; break;
                             }
-                            decim.setValue(value_dec);
-                            
                         }
-                        content.Children.Add(decim);
-                        campo = decim as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.DATETIME:
-                        FieldDateTime datet = new FieldDateTime(caption, prop_id);
-                        datet.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            datet.setValue(DateTime.Parse(update_value["value"].ToString()));
-                        content.Children.Add(datet);
-                        campo = datet as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.BOOLEAN:
-                        FieldBoolean boole = new FieldBoolean(caption, prop_id);
-                        boole.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                        {
-                            string vall = update_value["value"].ToString();
-                            if (vall != "null")
-                                boole.setValue(bool.Parse(vall));
-                        }
-                        content.Children.Add(boole);
-                        campo = boole as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.BO_REF:
-                        break;
-                    case FIELD_TYPES.BO_LINK:
-                        var lb1 = new FieldBOLink(prop_id, caption, item["link_to"].ToString());
-                        lb1.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            lb1.setValue(update_value["value"].ToString());
-                        content.Children.Add(lb1);
-                        campo = lb1 as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.BO_COLLECTION:
-                        FieldBOCollection bocoll = new FieldBOCollection(prop_id, caption, item["link_to"].ToString());
-                        bocoll.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            bocoll.setValue(update_value["value"] as List<string>);
-                        FieldLabel lb2 = new FieldLabel(prop_id + "BO_COLLECTION " + item["link_to"], prop_id);
-                        content.Children.Add(lb2);
-                        campo = lb2 as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    case FIELD_TYPES.DOUBLE:
-                        FieldDouble view2 = new FieldDouble(prop_id, caption);
-                        view2.FieldValueChanged = UpdateControls;
-                        if (IsUpdate && update_value["value"].ToString() != "null")
-                            view2.setValue(Double.Parse(update_value["value"].ToString()));
-                        content.Children.Add(view2);
-                        campo = view2 as StackLayout;
-                        formfield = new Models.FormField(ref campo, item["criteria"].ToString(), item["calculo"].ToString());
-                        break;
-                    default:
-                        break;
+                    Models.FormField formfield = null;
+                    StackLayout campo;
+                    switch (type)
+                    {
+                        case FIELD_TYPES.TIME:
+                            FieldTime ttime = new FieldTime(prop_id, caption);
+                            ttime.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                ttime.setValue(TimeSpan.Parse(update_value["value"].ToString()));
+                            content.Children.Add(ttime);
+                            campo = ttime as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.STRING:
+                            FieldString str = new FieldString(prop_id, caption);
+                            str.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                str.setValue(update_value["value"].ToString());
+                            content.Children.Add(str);
+                            campo = str as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.LOOKUP_FIXED:
+                            string datasource = item["datasource"].ToString();
+                            string prop_title = item["title"].ToString();
+                            var data1 = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getEnumeration(datasource);
+                            FieldLookUp look = new FieldLookUp(prop_id, prop_title, data1);
+                            look.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                look.setValue(Int32.Parse(update_value["value"].ToString()));
+                            content.Children.Add(look);
+                            campo = look as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.LOOKUP_BO:
+                            string bo_type = item["link_to"].ToString();
+                            FieldLookUpBO lookupbo = new FieldLookUpBO(prop_id, caption, bo_type);
+                            lookupbo.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                lookupbo.setValue(update_value["value"].ToString());
+                            content.Children.Add(lookupbo);
+                            campo = lookupbo as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.LABEL:
+                            FieldLabel label = new FieldLabel(caption, prop_id);
+                            content.Children.Add(label);
+                            break;
+                        case FIELD_TYPES.INTEGER:
+                            FieldInteger view = new FieldInteger(prop_id, caption);
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                view.setValue(Int32.Parse(update_value["value"].ToString()));
+                            view.FieldValueChanged = UpdateControls;
+                            content.Children.Add(view);
+                            campo = view as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.FIX_VALUE:
+                            break;
+                        case FIELD_TYPES.DECIMAL:
+                            FieldDecimal decim = new FieldDecimal(prop_id, caption);
+                            decim.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                            {
+                                decimal? value_dec = null;
+                                decimal real_val;
+                                if (decimal.TryParse(update_value["value"].ToString(), out real_val))
+                                {
+                                    value_dec = real_val;
+                                }
+                                decim.setValue(value_dec);
+
+                            }
+                            content.Children.Add(decim);
+                            campo = decim as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.DATETIME:
+                            FieldDateTime datet = new FieldDateTime(caption, prop_id);
+                            datet.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                datet.setValue(DateTime.Parse(update_value["value"].ToString()));
+                            content.Children.Add(datet);
+                            campo = datet as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.BOOLEAN:
+                            FieldBoolean boole = new FieldBoolean(caption, prop_id);
+                            boole.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                            {
+                                string vall = update_value["value"].ToString();
+                                if (vall != "null")
+                                    boole.setValue(bool.Parse(vall));
+                            }
+                            content.Children.Add(boole);
+                            campo = boole as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.BO_REF:
+                            break;
+                        case FIELD_TYPES.BO_LINK:
+                            var lb1 = new FieldBOLink(prop_id, caption, item["link_to"].ToString(), item["Association"].ToString());
+                            lb1.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                lb1.setValue(update_value["value"].ToString());
+                            content.Children.Add(lb1);
+                            campo = lb1 as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.BO_COLLECTION:
+                            FieldBOCollection bocoll = new FieldBOCollection(prop_id, caption, item["link_to"].ToString(), item["Association"].ToString());
+                            bocoll.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                bocoll.setValue(update_value["value"] as List<string>);
+                            content.Children.Add(bocoll);
+                            campo = bocoll as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        case FIELD_TYPES.DOUBLE:
+                            FieldDouble view2 = new FieldDouble(prop_id, caption);
+                            view2.FieldValueChanged = UpdateControls;
+                            if (IsUpdate && update_value["value"].ToString() != "null")
+                                view2.setValue(Double.Parse(update_value["value"].ToString()));
+                            content.Children.Add(view2);
+                            campo = view2 as StackLayout;
+                            formfield = new Models.FormField(ref campo, item["criteria"], item["calculo"]);
+                            break;
+                        default:
+                            break;
+                    }
+                    if (formfield != null)
+                    {
+                        formfield.ID = prop_id;
+                        allfields.Add(formfield);
+                    }
                 }
-                formfield.ID = prop_id;
-                allfields.Add(formfield);
-            }
-            dicfields = allfields.ToDictionary(x => x.ID, x => x);
+                dicfields = allfields.ToDictionary(x => x.ID, x => x);
+            });
+            AddEverything(maincontent);
         }
 
-        private Dictionary<string, object> SaveData(View v, int index)
+        private async void UpdateControls(object sender, PropertyChangingEventArgs e)
         {
-            Dictionary<string, object> elem = new Dictionary<string, object>();
-            if (v is FieldBOCollection)
+            if (Finished)
             {
-                var val = v as FieldBOCollection;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
+                await Task.Run(() =>
+                {
+                    foreach (var item in allfields)
+                    {
+                        item.EvaluateCriteria(ref dicfields, BO_ID);
+                        item.EvaluateCalculo(ref dicfields);
+                    }
+                });
             }
-            else if (v is FieldBOLink)
-            {
-                var val = v as FieldBOLink;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldBoolean)
-            {
-                var val = v as FieldBoolean;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldDateTime)
-            {
-                var val = v as FieldDateTime;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldDecimal)
-            {
-                var val = v as FieldDecimal;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldEnumeration)
-            {
-                var val = v as FieldEnumeration;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != -1)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldInteger)
-            {
-                var val = v as FieldInteger;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldLookUp)
-            {
-                var val = v as FieldLookUp;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != -1)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldLookUpBO)
-            {
-                var val = v as FieldLookUpBO;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldString)
-            {
-                var val = v as FieldString;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldTime)
-            {
-                var val = v as FieldTime;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldBoolean)
-            {
-                var val = v as FieldBoolean;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue().ToString());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            else if (v is FieldBOCollection)
-            {
-                var val = v as FieldBOCollection;
-                elem.Add("prop_id", val.Field_id);
-                if (val.getValue() != null)
-                    elem.Add("value", val.getValue());
-                else
-                    elem.Add("value", "null");
-                elem.Add("order", index);
-            }
-            return elem;
         }
 
-        private void UpdateControls(object sender, PropertyChangingEventArgs e)
-        {
-            foreach (var item in allfields)
-            {
-                item.EvaluateCriteria(ref dicfields, BO_ID);
-                item.EvaluateCalculo(ref dicfields);
-            }
-        }
-        private StackLayout content;
+        private string ID, BO_ID;
         private Label title;
-        private string ID;
-        private string BO_ID;
-        public bool IsUpdate { get; private set; }
+        private StackLayout content;
+        
+        private bool Finished = false;
         private List<Dictionary<string, object>> values;
-        public bool IsLinked { get; private set; }
-        public IFormPageEvents FormPageEvents { get; set; }
+        
         private List<Models.FormField> allfields;
         private Dictionary<string, Models.FormField> dicfields;
+
+        public bool IsUpdate { get; private set; }
+        public bool IsLinked { get; private set; }
+
+        public IFormPageEvents FormPageEvents { get; set; }
     }
 }

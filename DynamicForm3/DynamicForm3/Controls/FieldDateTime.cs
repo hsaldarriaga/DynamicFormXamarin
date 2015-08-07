@@ -32,7 +32,6 @@ namespace DynamicForm3.Controls
         public override void setValue(DateTime value)
         {
             picker.Date = value;
-            FieldChanging();
         }
         private DatePicker picker;
     }

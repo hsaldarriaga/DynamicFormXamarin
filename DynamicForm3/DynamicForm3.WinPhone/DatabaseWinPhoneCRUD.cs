@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 [assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.WinPhone.DatabaseWinPhoneCRUD))]
 namespace DynamicForm3.WinPhone
 {
-    public class DatabaseWinPhoneCRUD : DynamicForm3.Dependence.DatabaseCRUD
+    public class DatabaseWinPhoneCRUD : DynamicForm3.DependencyService.DatabaseCRUD
     {
         public string CreateBO(List<Dictionary<string, object>> obj, string bo_id, bool IsLink)
         {

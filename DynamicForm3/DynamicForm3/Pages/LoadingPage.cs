@@ -13,6 +13,7 @@ namespace DynamicForm3.Pages
     {
         public LoadingPage()
         {
+            NavigationPage.SetHasNavigationBar(this, false);
             BackgroundColor = Color.White;
             Content = new ActivityIndicator
             {
@@ -27,12 +28,12 @@ namespace DynamicForm3.Pages
 
         public async void Initialization()
         {
-            bool value = await DependencyService.Get<Dependence.DatabaseUtils>().LoadDatabase();
+            bool value = await DependencyService.Get<AllPlatformMethods.DatabaseUtils>().LoadDatabase();
             ActivityIndicator indicator = (ActivityIndicator)Content;
             indicator.IsRunning = false;
             if (value)
             {
-                await Navigation.PushAsync(new BOList());
+                await Navigation.PushAsync(new LoginPage());
                 Navigation.RemovePage(this);
             }
             else

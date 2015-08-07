@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
+using System.Linq;
+using System.Text;
+
+using Foundation;
+using UIKit;
 
 using PGC.Module.BusinessObjects.Bos;
 
@@ -17,22 +14,22 @@ using Couchbase.Lite;
 
 using Newtonsoft.Json.Linq;
 
-namespace DynamicForm3.Droid
+namespace DynamicForm3.iOS
 {
-    public class DroidDatabase
+    public class IOSDatabase
     {
-        private static DroidDatabase _Instance;
+         private static IOSDatabase _Instance;
 
-        public static DroidDatabase Instance
+        public static IOSDatabase Instance
         {
             get
             {
                 if (_Instance == null)
-                    _Instance = new DroidDatabase();
+                    _Instance = new IOSDatabase();
                 return _Instance;
             }
         }
-        private DroidDatabase()
+        private IOSDatabase()
         {
             db = Manager.SharedInstance.GetDatabase(DatabaseName);
         }

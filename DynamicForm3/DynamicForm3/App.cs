@@ -12,7 +12,7 @@ namespace DynamicForm3
         public App()
         {
             // The root page of your application
-            MainPage = new NavigationPage(new Pages.LoadingPage());
+            MainPage = new Pages.SplashScreen();
         }
 
         protected override void OnStart()

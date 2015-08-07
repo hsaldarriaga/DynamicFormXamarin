@@ -10,14 +10,28 @@ namespace DynamicForm3.Controls
 {
     public class FieldBOLink : Field<string>, Pages.IFormPageEvents
     {
-        public FieldBOLink(string id, string caption, string bo_type) : base(caption, id, FIELD_TYPES.BO_LINK)
+        public FieldBOLink(string id, string caption, string bo_type, string association) : base(caption, id, FIELD_TYPES.BO_LINK)
         {
-            var bt = new Button
+            HasAssociation = association != "null";
+            bt = new Button
             {
-                Text = "Más Detalles"
+                Text = "No Asignado",
+                IsEnabled = false
+            };
+            if (!HasAssociation)
+            {
+                bt.Text = "Mas detalles";
+                bt.IsEnabled = true;
+            }
+            var lb = new CaptionLabel
+            {
+                Text = "*Este campo no es editable desde este Business Object",
+                FontSize = 8
             };
             bt.Clicked += bt_Clicked;
             Children.Add(bt);
+            if (HasAssociation)
+                Children.Add(lb);
             this.bo_type = bo_type;
         }
 
@@ -25,14 +39,23 @@ namespace DynamicForm3.Controls
         {
             if (Value != null)
             {
-                var val = DependencyService.Get<Dependence.DatabaseUtils>().getDataBO(Value);
-                var pg = new Pages.FormPage(bo_type, val, true);
-                pg.FormPageEvents = this;
-                Navigation.PushAsync(pg);
+                if (HasAssociation)
+                {
+                    var val = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getDataBO(Value);
+                    var pg = new Pages.FormReadOnlyPage(bo_type, val);
+                    Navigation.PushAsync(pg);
+                }
+                else
+                {
+                    var val = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getDataBO(Value);
+                    var pg = new Pages.FormPage(bo_type, val, false);
+                    pg.FormPageEvents = this;
+                    Navigation.PushAsync(pg);
+                }
             }
             else
             {
-                var pg = new Pages.FormPage(bo_type, true);
+                var pg = new Pages.FormPage(bo_type, false);
                 pg.FormPageEvents = this;
                 Navigation.PushAsync(pg);
             }
@@ -41,7 +64,8 @@ namespace DynamicForm3.Controls
         public override void setValue(string value)
         {
             Value = value;
-            FieldChanging();
+            bt.IsEnabled = true;
+            bt.Text = "Detalles";
         }
 
         public override string getValue()
@@ -66,6 +90,8 @@ namespace DynamicForm3.Controls
         }
 
         private string Value = null;
+        public Boolean HasAssociation { get; private set; }
         private string bo_type;
+        private Button bt;
     }
 }

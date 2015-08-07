@@ -10,10 +10,10 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-[assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.Droid.DependenceService.DatabaseUtilsDroid))]
-namespace DynamicForm3.Droid.DependenceService
+[assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.Droid.DependencyService.DatabaseUtilsDroid))]
+namespace DynamicForm3.Droid.DependencyService
 {
-    public class DatabaseUtilsDroid : Java.Lang.Object, DynamicForm3.Dependence.DatabaseUtils
+    public class DatabaseUtilsDroid : Java.Lang.Object, DynamicForm3.AllPlatformMethods.DatabaseUtils
     {
         public DatabaseUtilsDroid() { }
 

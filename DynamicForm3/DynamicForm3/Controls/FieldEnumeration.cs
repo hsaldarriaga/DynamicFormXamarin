@@ -40,7 +40,6 @@ namespace DynamicForm3.Controls
         public override void setValue(int value)
         {
             picker.SelectedIndex = value;
-            FieldChanging();
         }
         private Picker picker;
         private Dictionary<string, int> values;

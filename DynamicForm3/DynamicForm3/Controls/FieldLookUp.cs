@@ -34,6 +34,7 @@ namespace DynamicForm3.Controls
             this.key = key.ToString();
             this.value = Int32.Parse(value.ToString());
             bt.Text = this.key;
+            FieldChanging();
         }
 
         public override int getValue()
@@ -45,7 +46,6 @@ namespace DynamicForm3.Controls
         {
             bt.Text = AllValues.First(e => e.Value == value).Key;
             this.value = value;
-            FieldChanging();
         }
 
         private Dictionary<string, int> AllValues;

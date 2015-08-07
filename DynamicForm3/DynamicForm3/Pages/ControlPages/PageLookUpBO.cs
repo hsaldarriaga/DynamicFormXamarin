@@ -19,6 +19,10 @@ namespace DynamicForm3.Pages
                 HorizontalOptions = LayoutOptions.Fill
             };
             bar.TextChanged += bar_TextChanged;
+            if (AllValues.Count == 0)
+            {
+                bar.Placeholder = "No hay elementos";
+            }
             lv = new ListView
             {
                 HorizontalOptions = LayoutOptions.Fill,
@@ -27,6 +31,7 @@ namespace DynamicForm3.Pages
             lv.ItemTapped += lv_ItemTapped;
             lv.ItemTemplate = new DataTemplate(typeof(TextCell));
             lv.ItemTemplate.SetBinding(TextCell.TextProperty, "Value");
+            lv.ItemsSource = values;
             Content = new StackLayout
             {
                 HorizontalOptions = LayoutOptions.FillAndExpand,

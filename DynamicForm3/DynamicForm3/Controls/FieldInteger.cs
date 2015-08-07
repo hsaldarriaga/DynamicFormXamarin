@@ -18,7 +18,7 @@ namespace DynamicForm3.Controls
                 KeyBoardType = "Numeric",
                 Keyboard =Keyboard.Numeric
             };
-            customEntry.TextChanged += (sender, e) =>
+            customEntry.Unfocused += (sender, e) =>
             {
                 FieldChanging();
             };
@@ -38,7 +38,6 @@ namespace DynamicForm3.Controls
             if (value.HasValue)
             {
                 customEntry.Text = value.Value + "";
-                FieldChanging();
             }
         }
 

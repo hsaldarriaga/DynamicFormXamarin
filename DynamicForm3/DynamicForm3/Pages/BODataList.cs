@@ -12,7 +12,7 @@ namespace DynamicForm3.Pages
         public BODataList(string bo_id)
         {
             _bo_id = bo_id;
-            values = DependencyService.Get<Dependence.DatabaseUtils>().getBOList(bo_id, false);
+            values = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getBOList(bo_id, false);
             search = new SearchBar
             {
                 HorizontalOptions = LayoutOptions.FillAndExpand,
@@ -91,19 +91,19 @@ namespace DynamicForm3.Pages
         public void FormDeleted(string doc_id)
         {
             search.Text = "";
-            values = DependencyService.Get<Dependence.DatabaseUtils>().getBOList(_bo_id, false);
+            values = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getBOList(_bo_id, false);
             LoadData();
         }
         public void FormUpdated(string doc_id)
         {
             search.Text = "";
-            values = DependencyService.Get<Dependence.DatabaseUtils>().getBOList(_bo_id, false);
+            values = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getBOList(_bo_id, false);
             LoadData();
         }
         public void FormCreated(string doc_id)
         {
             search.Text = "";
-            values = DependencyService.Get<Dependence.DatabaseUtils>().getBOList(_bo_id, false);
+            values = DependencyService.Get<AllPlatformMethods.DatabaseUtils>().getBOList(_bo_id, false);
             LoadData();
         }
 

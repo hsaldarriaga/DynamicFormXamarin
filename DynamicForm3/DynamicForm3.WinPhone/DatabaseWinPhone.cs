@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 [assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.WinPhone.DatabaseWinPhone))]
 namespace DynamicForm3.WinPhone
 {
-    public class DatabaseWinPhone : DynamicForm3.Dependence.DatabaseUtils
+    public class DatabaseWinPhone : DynamicForm3.DependencyService.DatabaseUtils
     {
         public DatabaseWinPhone() { }
 
@@ -20,10 +20,10 @@ namespace DynamicForm3.WinPhone
             return null;
         }
 
-        public Newtonsoft.Json.Linq.JToken getForm(string id)
-        {
-            return null;
-        }
+       // public Newtonsoft.Json.Linq.JToken getForm(string id)
+        //{
+          //  return null;
+        //}
 
         public Dictionary<string, int> getEnumeration(string id)
         {

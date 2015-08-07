@@ -27,6 +27,7 @@ namespace DynamicForm3.Pages
             lv.ItemTapped += lv_ItemTapped;
             lv.ItemTemplate = new DataTemplate(typeof(TextCell));
             lv.ItemTemplate.SetBinding(TextCell.TextProperty, "Key");
+            lv.ItemsSource = FilterValues;
             Content = new StackLayout
             {
                 HorizontalOptions = LayoutOptions.FillAndExpand,

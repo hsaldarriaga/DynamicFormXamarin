@@ -8,38 +8,39 @@ using UIKit;
 [assembly: Xamarin.Forms.Dependency(typeof(DynamicForm3.iOS.DatabaseUtilsIOS))]
 namespace DynamicForm3.iOS
 {
-    public class DatabaseUtilsIOS : DynamicForm3.Dependence.DatabaseUtils
+    public class DatabaseUtilsIOS : DynamicForm3.AllPlatformMethods.DatabaseUtils
     {
         public DatabaseUtilsIOS() { }
 
         public async Task<bool> LoadDatabase()
         {
-            return false;
+            IOSDatabase db = IOSDatabase.Instance;
+            return await db.CreateDataBase();
         }
 
         public async Task<Dictionary<string, string>> getForms()
         {
-            return null;
+            return await IOSDatabase.Instance.getAllForms();
         }
 
         public Newtonsoft.Json.Linq.JToken getForm(string id)
         {
-            return null;
+            return IOSDatabase.Instance.getForm(id);
         }
 
         public Dictionary<string, int> getEnumeration(string id)
         {
-            return null;
+            return IOSDatabase.Instance.getEnumeration(id);
         }
 
         public Dictionary<string, object> getDataBO(string id)
         {
-            return null;
+            return IOSDatabase.Instance.getDataBO(id);
         }
 
         public List<Dictionary<string, object>> getBOList(string bo_id, bool IncludeLink)
         {
-            return null;
+            return IOSDatabase.Instance.getDataBOList(bo_id, IncludeLink);
         }
     }
 }
